@@ -590,7 +590,7 @@ export async function startHttpTransport(
       productionNote = ` (via HTTPS, ensure reverse proxy is configured)`;
     }
 
-    if (process.stdout.isTTY) {
+    if (process.stdout.isTTY || config.mcpConsoleLog) {
       console.log(
         `\n🚀 MCP Server running in HTTP mode at: ${serverAddressLog}${productionNote}\n   (MCP Spec: 2025-03-26 Streamable HTTP Transport)\n`,
       );
