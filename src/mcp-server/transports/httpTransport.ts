@@ -93,7 +93,11 @@ function isOriginAllowed(req: Request, res: Response): boolean {
   logger.debug("Checking origin allowance", context);
 
   const allowed =
-    (origin && (allowedOrigins.includes("*") || allowedOrigins.includes(origin))) ||
+    // Allow if wildcard is set (with or without origin header)
+    allowedOrigins.includes("*") ||
+    // Allow if origin matches allowed list
+    (origin && allowedOrigins.includes(origin)) ||
+    // Allow localhost requests without origin
     (isLocalhostBinding && (!origin || origin === "null"));
 
   if (allowed && origin) {
