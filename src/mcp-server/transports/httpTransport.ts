@@ -93,17 +93,22 @@ function isOriginAllowed(req: Request, res: Response): boolean {
   logger.debug("Checking origin allowance", context);
 
   const allowed =
-    (origin && allowedOrigins.includes(origin)) ||
+    (origin && (allowedOrigins.includes("*") || allowedOrigins.includes(origin))) ||
     (isLocalhostBinding && (!origin || origin === "null"));
 
   if (allowed && origin) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
+    // Use "*" header if wildcard is configured, otherwise echo the specific origin
+    const corsOrigin = allowedOrigins.includes("*") ? "*" : origin;
+    res.setHeader("Access-Control-Allow-Origin", corsOrigin);
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
     res.setHeader(
       "Access-Control-Allow-Headers",
       "Content-Type, Mcp-Session-Id, Last-Event-ID, Authorization",
     );
-    res.setHeader("Access-Control-Allow-Credentials", "true");
+    // Note: credentials can't be used with wildcard origin
+    if (!allowedOrigins.includes("*")) {
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+    }
   } else if (!allowed && origin) {
     logger.warning(`Origin denied: ${origin}`, context);
   }
