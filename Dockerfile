@@ -38,10 +38,11 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Create non-root user and group
-# Create app directory and set permissions
-RUN groupadd --system --gid 1987 service-user && \
-    useradd --system --uid 1987 --gid service-user -m service-user && \
+# Create shared group for multi-container volume access (GID 2000)
+# Create service user with unique UID but shared GID
+RUN groupadd --system --gid 2000 shared-data && \
+    groupadd --system --gid 1987 service-user && \
+    useradd --system --uid 1987 --gid service-user -G shared-data -m service-user && \
     mkdir -p /app && \
     chown -R service-user:service-user /app
 
@@ -63,4 +64,5 @@ USER service-user
 # EXPOSE 3000
 
 # Define the command to run the application using the correct build output path ('dist')
-CMD ["mcp-proxy", "node", "dist/index.js"]
+# Set umask via shell to ensure group-writable files in shared volumes
+CMD ["/bin/sh", "-c", "umask 0002 && exec mcp-proxy node dist/index.js"]
